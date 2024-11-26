@@ -37,10 +37,10 @@ extern void literal_table_start_iteration();
 // End the current iteration over the literal table.
 extern void literal_table_end_iteration();
 
-// Is there another float in the literal table?
+// Is there another word in the literal table?
 extern bool literal_table_iteration_has_next();
 
-// Return the next word_type in the literal table
+// Return the next word in the literal table
 // and advance the iteration
 extern word_type literal_table_iteration_next();
 

@@ -138,7 +138,7 @@ void literal_table_end_iteration()
     iterating = false;
 }
 
-// Is there another float in the literal table?
+// Is there another word in the literal table?
 bool literal_table_iteration_has_next()
 {
     literal_table_okay();
@@ -149,12 +149,12 @@ bool literal_table_iteration_has_next()
     return ret;
 }
 
-// Return the next float in the literal table
+// Return the next word in the literal table
 // and advance the iteration
 word_type literal_table_iteration_next()
 {
     assert(iteration_next != NULL);
-    float ret = iteration_next->value;
+    word_type ret = iteration_next->value;
     iteration_next = iteration_next->next;
     return ret;
 }
