@@ -1,196 +1,111 @@
-#include "gen_code.h"
-#include "literal_table.h"
-#include "vm_code.h"
-#include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "gen_code.h"
+#include "ast.h"
+#include "bof.h"
 
-// Helper function to handle errors during code generation
-void bail_with_error(const char *message)
-{
-    fprintf(stderr, "Error: %s\n", message);
-    exit(1);
+// Symbol table placeholder for variable management
+typedef struct {
+    char *name;
+    int address;
+} symbol_t;
+
+#define MAX_SYMBOLS 1024
+static symbol_t symbol_table[MAX_SYMBOLS];
+static int symbol_count = 0;
+
+// Initialize code generator resources
+void gen_code_initialize() {
+    symbol_count = 0; // Clear the symbol table
 }
 
-// Function to generate code for an expression
-code_seq gen_code_expr(expr_t expr)
-{
-    code_seq result;
-    
-    switch (expr->type)
-    {
-    case EXPR_LITERAL:
-        result = code_seq_push_value(expr->value);  // Push literal value
-        break;
-    
-    case EXPR_VARIABLE:
-        result = code_seq_push_variable(expr->var_name);  // Push variable value
-        break;
-    
-    case EXPR_BINARY_OP:
-        // Recursively generate code for left and right operands
-        result = gen_code_expr(expr->left_operand);
-        code_seq_add(result, gen_code_expr(expr->right_operand));
-        
-        // Perform the binary operation (e.g., +, -, *)
-        switch (expr->op)
-        {
-        case OP_ADD:
-            result = code_seq_add(result, code_add_instruction());
+// Helper function to find a variable in the symbol table
+static int find_symbol(char *name) {
+    for (int i = 0; i < symbol_count; i++) {
+        if (strcmp(symbol_table[i].name, name) == 0) {
+            return symbol_table[i].address;
+        }
+    }
+    return -1; // Not found
+}
+
+// Helper function to add a new variable to the symbol table
+static int add_symbol(char *name) {
+    if (symbol_count >= MAX_SYMBOLS) {
+        fprintf(stderr, "Symbol table overflow.\n");
+        exit(1);
+    }
+    symbol_table[symbol_count].name = name;
+    symbol_table[symbol_count].address = symbol_count; // Simplistic memory mapping
+    return symbol_count++;
+}
+
+// Generate code for expressions
+static void gen_code_expression(BOFFILE bf, expr_t expr) {
+    switch (expr->tag) {
+        case EXPR_LITERAL:
+            bof_emit(bf, OP_LIT, expr->literal_value);
             break;
-        case OP_SUB:
-            result = code_seq_add(result, code_sub_instruction());
-            break;
-        case OP_MUL:
-            result = code_seq_add(result, code_mul_instruction());
-            break;
-        case OP_DIV:
-            result = code_seq_add(result, code_div_instruction());
-            break;
-        default:
-            bail_with_error("Unsupported binary operator");
+        case EXPR_VAR: {
+            int addr = find_symbol(expr->var_name);
+            if (addr == -1) {
+                fprintf(stderr, "Undefined variable: %s\n", expr->var_name);
+                exit(1);
+            }
+            bof_emit(bf, OP_LOD, addr);
             break;
         }
-        break;
-    
-    default:
-        bail_with_error("Unsupported expression type");
-        break;
+        case EXPR_BINOP:
+            gen_code_expression(bf, expr->binop.left);
+            gen_code_expression(bf, expr->binop.right);
+            switch (expr->binop.op) {
+                case BINOP_ADD: bof_emit(bf, OP_ADD); break;
+                case BINOP_SUB: bof_emit(bf, OP_SUB); break;
+                case BINOP_MUL: bof_emit(bf, OP_MUL); break;
+                case BINOP_DIV: bof_emit(bf, OP_DIV); break;
+                default:
+                    fprintf(stderr, "Unknown binary operator.\n");
+                    exit(1);
+            }
+            break;
+        default:
+            fprintf(stderr, "Unknown expression type.\n");
+            exit(1);
     }
-    
-    return result;
 }
 
-// Function to generate code for a print statement
-code_seq gen_code_print(print_stmt_t print_stmt)
-{
-    code_seq result = gen_code_expr(print_stmt->expr);  // Generate code for the expression to be printed
-    code_seq_add(result, code_push_instruction(PRINT));  // Push the PRINT operation
-    return result;
-}
-
-// Function to generate code for an assignment statement
-code_seq gen_code_assign(assign_stmt_t assign_stmt)
-{
-    code_seq result = gen_code_expr(assign_stmt->expr);  // Generate code for the expression on the right-hand side
-    code_seq_add(result, code_store_variable(assign_stmt->var_name));  // Store the result in the variable
-    return result;
-}
-
-// Function to generate code for a procedure declaration (not required for this assignment, but future-proof)
-code_seq gen_code_proc_decl(proc_decl_t proc_decl)
-{
-    // Procedure code generation is not needed for this assignment as per the current instructions
-    return code_seq_empty();  // Return an empty sequence
-}
-
-// Function to generate code for a program statement
-code_seq gen_code_stmt(stmt_t stmt)
-{
-    code_seq result;
-    
-    switch (stmt->type)
-    {
-    case STMT_ASSIGN:
-        result = gen_code_assign((assign_stmt_t)stmt);  // Handle assignment
-        break;
-    
-    case STMT_PRINT:
-        result = gen_code_print((print_stmt_t)stmt);  // Handle print statement
-        break;
-    
-    default:
-        bail_with_error("Unsupported statement type");
-        break;
+// Generate code for statements
+static void gen_code_statement(BOFFILE bf, stmt_t stmt) {
+    switch (stmt->tag) {
+        case STMT_ASSIGN: {
+            int addr = find_symbol(stmt->assign.var_name);
+            if (addr == -1) {
+                addr = add_symbol(stmt->assign.var_name);
+            }
+            gen_code_expression(bf, stmt->assign.expr);
+            bof_emit(bf, OP_STR, addr);
+            break;
+        }
+        case STMT_PRINT:
+            gen_code_expression(bf, stmt->print.expr);
+            bof_emit(bf, OP_PRINT);
+            break;
+        default:
+            fprintf(stderr, "Unknown statement type.\n");
+            exit(1);
     }
-    
-    return result;
 }
 
-// Function to generate code for the entire program
-code_seq gen_code_program(program_t program)
-{
-    code_seq result = code_seq_empty();  // Start with an empty code sequence
-    
-    // Generate code for each statement in the program
-    for (int i = 0; i < program->num_statements; i++)
-    {
-        code_seq stmt_code = gen_code_stmt(program->statements[i]);
-        result = code_seq_add(result, stmt_code);
+// Generate code for a block of statements
+static void gen_code_block(BOFFILE bf, block_t block) {
+    for (stmt_list_t stmt = block->stmts; stmt != NULL; stmt = stmt->next) {
+        gen_code_statement(bf, stmt->stmt);
     }
-    
-    // End the program with an EXIT instruction
-    result = code_seq_add(result, code_exit_instruction());
-    
-    return result;
 }
 
-// Function to generate code for an expression
-code_seq code_seq_push_value(int value)
-{
-    code_seq seq = code_seq_empty();
-    seq = code_seq_add(seq, code_push_instruction(value));
-    return seq;
-}
-
-// Function to push a variable to the code sequence
-code_seq code_seq_push_variable(const char *var_name)
-{
-    code_seq seq = code_seq_empty();
-    seq = code_seq_add(seq, code_push_variable_instruction(var_name));
-    return seq;
-}
-
-// Function to store the result of an expression in a variable
-code_seq code_store_variable(const char *var_name)
-{
-    return code_store_instruction(var_name);
-}
-
-// Function to generate binary operation code
-code_seq code_add_instruction()
-{
-    return code_binary_op_instruction(ADD);
-}
-
-code_seq code_sub_instruction()
-{
-    return code_binary_op_instruction(SUB);
-}
-
-code_seq code_mul_instruction()
-{
-    return code_binary_op_instruction(MUL);
-}
-
-code_seq code_div_instruction()
-{
-    return code_binary_op_instruction(DIV);
-}
-
-// Helper functions for handling instruction generation
-code_seq code_push_instruction(int value)
-{
-    code_seq seq = code_seq_empty();
-    seq = code_seq_add(seq, generate_push_instruction(value));
-    return seq;
-}
-
-code_seq code_push_variable_instruction(const char *var_name)
-{
-    code_seq seq = code_seq_empty();
-    seq = code_seq_add(seq, generate_push_variable_instruction(var_name));
-    return seq;
-}
-
-code_seq code_binary_op_instruction(opcode_t op)
-{
-    code_seq seq = code_seq_empty();
-    seq = code_seq_add(seq, generate_binary_op_instruction(op));
-    return seq;
-}
-
-code_seq code_exit_instruction()
-{
-    return generate_exit_instruction();
+// Entry point for program code generation
+void gen_code_program(BOFFILE bf, block_t prog) {
+    gen_code_initialize();
+    gen_code_block(bf, prog);
+    bof_emit(bf, OP_HALT); // End of program
 }
