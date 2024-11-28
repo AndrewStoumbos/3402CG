@@ -1,6 +1,7 @@
 /* $Id: gen_code.c,v 1.25 2023/11/28 22:12:58 leavens Exp $ */
 #include <limits.h>
 #include <string.h>
+#include "float.tab.h"
 #include "ast.h"
 #include "code.h"
 #include "id_use.h"
@@ -73,7 +74,7 @@ static void gen_code_output_program(BOFFILE bf, code_seq main_cs)
 
 // Requires: bf if open for writing in binary
 // Generate code for prog into bf
-void gen_code_program(BOFFILE bf, block_t prog)
+void gen_code_program(BOFFILE bf, program_t prog)
 {
     code_seq main_cs;
     // We want to make the main program's AR look like all blocks... so:
@@ -117,7 +118,7 @@ code_seq gen_code_var_decls(var_decls_t vds)
 // (one to allocate space and another to initialize that space)
 code_seq gen_code_var_decl(var_decl_t vd)
 {
-    return gen_code_idents(vd.ident_list, vd.type_tag);
+    return gen_code_idents(vd.idents, vd.type);
 }
 
 // Generate code for the identififers in idents with type vt
