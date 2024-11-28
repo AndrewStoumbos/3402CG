@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_SPL_TAB_H_INCLUDED
-# define YY_YY_SPL_TAB_H_INCLUDED
+#ifndef YY_YY_FLOAT_TAB_H_INCLUDED
+# define YY_YY_FLOAT_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 7 "spl.y"
+#line 7 "float.y"
 
 
  /* Including "ast.h" must be at the top, to define the AST type */
@@ -58,7 +58,7 @@ extern int yydebug;
 extern void yyerror(const char *filename, const char *msg);
 
 
-#line 62 "spl.tab.h"
+#line 62 "float.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -75,59 +75,36 @@ extern void yyerror(const char *filename, const char *msg);
     minussym = 261,                /* "-"  */
     multsym = 262,                 /* "*"  */
     divsym = 263,                  /* "/"  */
-    periodsym = 264,               /* "."  */
-    semisym = 265,                 /* ";"  */
-    eqsym = 266,                   /* "="  */
-    commasym = 267,                /* ","  */
-    becomessym = 268,              /* ":="  */
-    lparensym = 269,               /* "("  */
-    rparensym = 270,               /* ")"  */
-    constsym = 271,                /* "const"  */
-    varsym = 272,                  /* "var"  */
-    procsym = 273,                 /* "proc"  */
-    callsym = 274,                 /* "call"  */
-    beginsym = 275,                /* "begin"  */
-    endsym = 276,                  /* "end"  */
-    ifsym = 277,                   /* "if"  */
-    thensym = 278,                 /* "then"  */
-    elsesym = 279,                 /* "else"  */
-    whilesym = 280,                /* "while"  */
-    dosym = 281,                   /* "do"  */
-    readsym = 282,                 /* "read"  */
-    printsym = 283,                /* "print"  */
-    divisiblesym = 284,            /* "divisible"  */
-    bysym = 285,                   /* "by"  */
-    eqeqsym = 286,                 /* "=="  */
-    neqsym = 287,                  /* "!="  */
-    ltsym = 288,                   /* "<"  */
-    leqsym = 289,                  /* "<="  */
-    gtsym = 290,                   /* ">"  */
-    geqsym = 291                   /* ">="  */
+    semisym = 264,                 /* ";"  */
+    commasym = 265,                /* ","  */
+    becomessym = 266,              /* "="  */
+    floatsym = 267,                /* "float"  */
+    boolsym = 268,                 /* "bool"  */
+    beginsym = 269,                /* "{"  */
+    endsym = 270,                  /* "}"  */
+    ifsym = 271,                   /* "if"  */
+    readsym = 272,                 /* "read"  */
+    writesym = 273,                /* "write"  */
+    eqsym = 274,                   /* "=="  */
+    neqsym = 275,                  /* "!="  */
+    notsym = 276,                  /* "!"  */
+    ltsym = 277,                   /* "<"  */
+    leqsym = 278,                  /* "<="  */
+    gtsym = 279,                   /* ">"  */
+    geqsym = 280,                  /* ">="  */
+    lparensym = 281,               /* "("  */
+    rparensym = 282                /* ")"  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
 
-/* Location type.  */
-#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
-typedef struct YYLTYPE YYLTYPE;
-struct YYLTYPE
-{
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-};
-# define YYLTYPE_IS_DECLARED 1
-# define YYLTYPE_IS_TRIVIAL 1
-#endif
-
 
 extern YYSTYPE yylval;
-extern YYLTYPE yylloc;
+
 
 int yyparse (char const *file_name);
 
 
-#endif /* !YY_YY_SPL_TAB_H_INCLUDED  */
+#endif /* !YY_YY_FLOAT_TAB_H_INCLUDED  */
