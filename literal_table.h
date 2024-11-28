@@ -1,4 +1,3 @@
-// $Id: literal_table.h,v 1.2 2023/11/13 12:45:52 leavens Exp $
 #ifndef _LITERAL_TABLE_H
 #define _LITERAL_TABLE_H
 #include <stdbool.h>

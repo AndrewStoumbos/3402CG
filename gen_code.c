@@ -1,7 +1,7 @@
 /* $Id: gen_code.c,v 1.25 2023/11/28 22:12:58 leavens Exp $ */
 #include <limits.h>
 #include <string.h>
-#include "float.tab.h"
+#include "spl.tab.h"
 #include "ast.h"
 #include "code.h"
 #include "id_use.h"
@@ -21,17 +21,17 @@ void gen_code_initialize()
 // Requires: bf if open for writing in binary
 // and prior to this scope checking and type checking have been done.
 // Write all the instructions in cs to bf in order
-static void gen_code_output_seq(BOFFILE bf, code_seq cs)
+static void gen_code_output_seq(BOFFILE bf, code cs)
 {
     while (!code_seq_is_empty(cs)) {
-	bin_instr_t inst = code_seq_first(cs)->instr;
+	bin_instr_t inst = gen_code_output_program(cs)->instr;
 	instruction_write_bin_instr(bf, inst);
 	cs = code_seq_rest(cs);
     }
 }
 
 // Return a header appropriate for the give code
-static BOFHeader gen_code_program_header(code_seq main_cs)
+static BOFHeader gen_code_program_header(code main_cs)
 {
     BOFHeader ret;
     strncpy(ret.magic, "FBF", 4);  // for FLOAT SRM
@@ -40,11 +40,11 @@ static BOFHeader gen_code_program_header(code_seq main_cs)
     ret.text_length = code_seq_size(main_cs) * BYTES_PER_WORD;
     int dsa = MAX(ret.text_length, 1024) + BYTES_PER_WORD;
     ret.data_start_address = dsa;
-    ret.ints_length = 0; // FLOAT has no int literals
-    ret.floats_length = literal_table_size() * BYTES_PER_WORD;
+    ret.text_length = 0; // FLOAT has no int literals
+    ret.data_length = literal_table_size() * BYTES_PER_WORD;
     int sba = dsa
 	+ ret.data_start_address
-	+ ret.ints_length + ret.floats_length + STACK_SPACE;
+	+ ret.data_length + ret.text_length + STACK_SPACE;
     ret.stack_bottom_addr = sba;
     return ret;
 }
@@ -53,7 +53,7 @@ static void gen_code_output_literals(BOFFILE bf)
 {
     literal_table_start_iteration();
     while (literal_table_iteration_has_next()) {
-	float_type w = literal_table_iteration_next();
+	word_type w = literal_table_iteration_next();
 	// debug_print("Writing literal %f to BOF file\n", w);
 	bof_write_float(bf, w);
     }
@@ -62,7 +62,7 @@ static void gen_code_output_literals(BOFFILE bf)
 
 // Requires: bf is open for writing in binary
 // Write the program's BOFFILE to bf
-static void gen_code_output_program(BOFFILE bf, code_seq main_cs)
+static void gen_code_output_program(BOFFILE bf, code main_cs)
 {
     BOFHeader bfh = gen_code_program_header(main_cs);
     bof_write_header(bf, bfh);
@@ -74,9 +74,9 @@ static void gen_code_output_program(BOFFILE bf, code_seq main_cs)
 
 // Requires: bf if open for writing in binary
 // Generate code for prog into bf
-void gen_code_program(BOFFILE bf, program_t prog)
+void gen_code_program(BOFFILE bf, block_t prog)
 {
-    code_seq main_cs;
+    code main_cs;
     // We want to make the main program's AR look like all blocks... so:
     // allocate space and initialize any variables
     main_cs = gen_code_var_decls(prog.var_decls);
@@ -87,7 +87,7 @@ void gen_code_program(BOFFILE bf, program_t prog)
     main_cs = code_seq_concat(main_cs, code_save_registers_for_AR());
     main_cs
 	= code_seq_concat(main_cs,
-			  gen_code_stmt(prog.stmt));
+			  gen_code_stmt(prog.stmts));
     main_cs = code_seq_concat(main_cs,
 			      code_restore_registers_from_AR());
     main_cs = code_seq_concat(main_cs,
@@ -100,9 +100,9 @@ void gen_code_program(BOFFILE bf, program_t prog)
 // Generate code for the var_decls_t vds to out
 // There are 2 instructions generated for each identifier declared
 // (one to allocate space and another to initialize that space)
-code_seq gen_code_var_decls(var_decls_t vds)
+code gen_code_var_decls(var_decls_t vds)
 {
-    code_seq ret = code_seq_empty();
+    code ret = code();
     var_decl_t *vdp = vds.var_decls;
     while (vdp != NULL) {
 	// generate these in reverse order,
@@ -116,20 +116,20 @@ code_seq gen_code_var_decls(var_decls_t vds)
 // Generate code for a single <var-decl>, vd,
 // There are 2 instructions generated for each identifier declared
 // (one to allocate space and another to initialize that space)
-code_seq gen_code_var_decl(var_decl_t vd)
+code gen_code_var_decl(var_decl_t vd)
 {
-    return gen_code_idents(vd.idents, vd.type);
+    return gen_code_idents(vd.ident_list, vd.type_tag);
 }
 
 // Generate code for the identififers in idents with type vt
 // in reverse order (so the first declared are allocated last).
 // There are 2 instructions generated for each identifier declared
 // (one to allocate space and another to initialize that space)
-code_seq gen_code_idents(idents_t idents,
+code gen_code_idents(ident_list_t idents,
 			 type_exp_e vt)
 {
-    code_seq ret = code_seq_empty();
-    ident_t *idp = idents.idents;
+    code ret = code_seq_empty();
+    ident_t *idp = idents.start;
     while (idp != NULL) {
 	code_seq alloc_and_init
 	    = code_seq_singleton(code_addi(SP, SP,
@@ -159,14 +159,14 @@ code_seq gen_code_idents(idents_t idents,
 }
 
 // Generate code for stmt
-code_seq gen_code_stmt(stmt_t stmt)
+code gen_code_stmt(stmt_t stmt)
 {
     switch (stmt.stmt_kind) {
     case assign_stmt:
 	return gen_code_assign_stmt(stmt.data.assign_stmt);
 	break;
-    case begin_stmt:
-	return gen_code_begin_stmt(stmt.data.begin_stmt);
+    case block_stmt:
+	return gen_code_begin_stmt(stmt.data.block_stmt);
 	break;
     case if_stmt:
 	return gen_code_if_stmt(stmt.data.if_stmt);
@@ -174,8 +174,8 @@ code_seq gen_code_stmt(stmt_t stmt)
     case read_stmt:
 	return gen_code_read_stmt(stmt.data.read_stmt);
 	break;
-    case write_stmt:
-	return gen_code_write_stmt(stmt.data.write_stmt);
+    case print_stmt:
+	return gen_code_write_stmt(stmt.data.print_stmt);
 	break;
     default:
 	bail_with_error("Call to gen_code_stmt with an AST that is not a statement!");
@@ -186,16 +186,16 @@ code_seq gen_code_stmt(stmt_t stmt)
 }
 
 // Generate code for stmt
-code_seq gen_code_assign_stmt(assign_stmt_t stmt)
+code gen_code_assign_stmt(assign_stmt_t stmt)
 {
     // can't call gen_code_ident,
     // since stmt.name is not an ident_t
-    code_seq ret;
+    code ret;
     // put value of expression in $v0
     ret = gen_code_expr(*(stmt.expr));
     assert(stmt.idu != NULL);
     assert(id_use_get_attrs(stmt.idu) != NULL);
-    type_exp_e typ = id_use_get_attrs(stmt.idu)->type;
+    id_attrs typ = id_use_get_attrs(stmt.idu)->;
     ret = code_seq_concat(ret, code_pop_stack_into_reg(V0, typ));
     // put frame pointer from the lexical address of the name
     // (using stmt.idu) into $t9
@@ -204,7 +204,7 @@ code_seq gen_code_assign_stmt(assign_stmt_t stmt)
     unsigned int offset_count = id_use_get_attrs(stmt.idu)->offset_count;
     assert(offset_count <= USHRT_MAX); // it has to fit!
     switch (id_use_get_attrs(stmt.idu)->type) {
-    case float_te:
+    case word_:
 	ret = code_seq_add_to_end(ret,
 				  code_fsw(T9, V0, offset_count));
 	break;

@@ -1,0 +1,804 @@
+Grammar
+
+    0 $accept: program $end
+
+    1 program: varDecls stmt
+
+    2 varDecls: empty
+    3         | varDecls varDecl
+
+    4 empty: ε
+
+    5 varDecl: "float" idents ";"
+    6        | "bool" idents ";"
+
+    7 idents: identsym
+    8       | idents "," identsym
+
+    9 stmt: assignStmt
+   10     | beginStmt
+   11     | ifStmt
+   12     | readStmt
+   13     | writeStmt
+
+   14 assignStmt: identsym "=" expr ";"
+
+   15 beginStmt: "{" varDecls stmts "}"
+
+   16 ifStmt: "if" "(" expr ")" stmt
+
+   17 readStmt: "read" identsym ";"
+
+   18 writeStmt: "write" expr ";"
+
+   19 stmts: stmt
+   20      | stmts stmt
+
+   21 expr: lterm
+   22     | lterm relOp lterm
+
+   23 lterm: lfactor
+   24      | "!" lterm
+
+   25 relOp: "=="
+   26      | "!="
+   27      | "<"
+   28      | "<="
+   29      | ">"
+   30      | ">="
+
+   31 lfactor: term
+   32        | lfactor "+" term
+   33        | lfactor "-" term
+
+   34 term: factor
+   35     | term "*" factor
+   36     | term "/" factor
+
+   37 factor: identsym
+   38       | numbersym
+   39       | "(" expr ")"
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    identsym <ident> (258) 7 8 14 17 37
+    numbersym <number> (259) 38
+    "+" <token> (260) 32
+    "-" <token> (261) 33
+    "*" <token> (262) 35
+    "/" <token> (263) 36
+    ";" <token> (264) 5 6 14 17 18
+    "," <token> (265) 8
+    "=" <token> (266) 14
+    "float" <token> (267) 5
+    "bool" <token> (268) 6
+    "{" <token> (269) 15
+    "}" <token> (270) 15
+    "if" <token> (271) 16
+    "read" <token> (272) 17
+    "write" <token> (273) 18
+    "==" <token> (274) 25
+    "!=" <token> (275) 26
+    "!" <token> (276) 24
+    "<" <token> (277) 27
+    "<=" <token> (278) 28
+    ">" <token> (279) 29
+    ">=" <token> (280) 30
+    "(" <token> (281) 16 39
+    ")" <token> (282) 16 39
+
+
+Nonterminals, with rules where they appear
+
+    $accept (28)
+        on left: 0
+    program <program> (29)
+        on left: 1
+        on right: 0
+    varDecls <var_decls> (30)
+        on left: 2 3
+        on right: 1 3 15
+    empty <empty> (31)
+        on left: 4
+        on right: 2
+    varDecl <var_decl> (32)
+        on left: 5 6
+        on right: 3
+    idents <idents> (33)
+        on left: 7 8
+        on right: 5 6 8
+    stmt <stmt> (34)
+        on left: 9 10 11 12 13
+        on right: 1 16 19 20
+    assignStmt <assign_stmt> (35)
+        on left: 14
+        on right: 9
+    beginStmt <begin_stmt> (36)
+        on left: 15
+        on right: 10
+    ifStmt <if_stmt> (37)
+        on left: 16
+        on right: 11
+    readStmt <read_stmt> (38)
+        on left: 17
+        on right: 12
+    writeStmt <write_stmt> (39)
+        on left: 18
+        on right: 13
+    stmts <stmts> (40)
+        on left: 19 20
+        on right: 15 20
+    expr <expr> (41)
+        on left: 21 22
+        on right: 14 16 18 39
+    lterm <expr> (42)
+        on left: 23 24
+        on right: 21 22 24
+    relOp <token> (43)
+        on left: 25 26 27 28 29 30
+        on right: 22
+    lfactor <expr> (44)
+        on left: 31 32 33
+        on right: 23 32 33
+    term <expr> (45)
+        on left: 34 35 36
+        on right: 31 32 33 35 36
+    factor <expr> (46)
+        on left: 37 38 39
+        on right: 34 35 36
+
+
+State 0
+
+    0 $accept: • program $end
+
+    $default  reduce using rule 4 (empty)
+
+    program   go to state 1
+    varDecls  go to state 2
+    empty     go to state 3
+
+
+State 1
+
+    0 $accept: program • $end
+
+    $end  shift, and go to state 4
+
+
+State 2
+
+    1 program: varDecls • stmt
+    3 varDecls: varDecls • varDecl
+
+    identsym  shift, and go to state 5
+    "float"   shift, and go to state 6
+    "bool"    shift, and go to state 7
+    "{"       shift, and go to state 8
+    "if"      shift, and go to state 9
+    "read"    shift, and go to state 10
+    "write"   shift, and go to state 11
+
+    varDecl     go to state 12
+    stmt        go to state 13
+    assignStmt  go to state 14
+    beginStmt   go to state 15
+    ifStmt      go to state 16
+    readStmt    go to state 17
+    writeStmt   go to state 18
+
+
+State 3
+
+    2 varDecls: empty •
+
+    $default  reduce using rule 2 (varDecls)
+
+
+State 4
+
+    0 $accept: program $end •
+
+    $default  accept
+
+
+State 5
+
+   14 assignStmt: identsym • "=" expr ";"
+
+    "="  shift, and go to state 19
+
+
+State 6
+
+    5 varDecl: "float" • idents ";"
+
+    identsym  shift, and go to state 20
+
+    idents  go to state 21
+
+
+State 7
+
+    6 varDecl: "bool" • idents ";"
+
+    identsym  shift, and go to state 20
+
+    idents  go to state 22
+
+
+State 8
+
+   15 beginStmt: "{" • varDecls stmts "}"
+
+    $default  reduce using rule 4 (empty)
+
+    varDecls  go to state 23
+    empty     go to state 3
+
+
+State 9
+
+   16 ifStmt: "if" • "(" expr ")" stmt
+
+    "("  shift, and go to state 24
+
+
+State 10
+
+   17 readStmt: "read" • identsym ";"
+
+    identsym  shift, and go to state 25
+
+
+State 11
+
+   18 writeStmt: "write" • expr ";"
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    expr     go to state 30
+    lterm    go to state 31
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 12
+
+    3 varDecls: varDecls varDecl •
+
+    $default  reduce using rule 3 (varDecls)
+
+
+State 13
+
+    1 program: varDecls stmt •
+
+    $default  reduce using rule 1 (program)
+
+
+State 14
+
+    9 stmt: assignStmt •
+
+    $default  reduce using rule 9 (stmt)
+
+
+State 15
+
+   10 stmt: beginStmt •
+
+    $default  reduce using rule 10 (stmt)
+
+
+State 16
+
+   11 stmt: ifStmt •
+
+    $default  reduce using rule 11 (stmt)
+
+
+State 17
+
+   12 stmt: readStmt •
+
+    $default  reduce using rule 12 (stmt)
+
+
+State 18
+
+   13 stmt: writeStmt •
+
+    $default  reduce using rule 13 (stmt)
+
+
+State 19
+
+   14 assignStmt: identsym "=" • expr ";"
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    expr     go to state 35
+    lterm    go to state 31
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 20
+
+    7 idents: identsym •
+
+    $default  reduce using rule 7 (idents)
+
+
+State 21
+
+    5 varDecl: "float" idents • ";"
+    8 idents: idents • "," identsym
+
+    ";"  shift, and go to state 36
+    ","  shift, and go to state 37
+
+
+State 22
+
+    6 varDecl: "bool" idents • ";"
+    8 idents: idents • "," identsym
+
+    ";"  shift, and go to state 38
+    ","  shift, and go to state 37
+
+
+State 23
+
+    3 varDecls: varDecls • varDecl
+   15 beginStmt: "{" varDecls • stmts "}"
+
+    identsym  shift, and go to state 5
+    "float"   shift, and go to state 6
+    "bool"    shift, and go to state 7
+    "{"       shift, and go to state 8
+    "if"      shift, and go to state 9
+    "read"    shift, and go to state 10
+    "write"   shift, and go to state 11
+
+    varDecl     go to state 12
+    stmt        go to state 39
+    assignStmt  go to state 14
+    beginStmt   go to state 15
+    ifStmt      go to state 16
+    readStmt    go to state 17
+    writeStmt   go to state 18
+    stmts       go to state 40
+
+
+State 24
+
+   16 ifStmt: "if" "(" • expr ")" stmt
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    expr     go to state 41
+    lterm    go to state 31
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 25
+
+   17 readStmt: "read" identsym • ";"
+
+    ";"  shift, and go to state 42
+
+
+State 26
+
+   37 factor: identsym •
+
+    $default  reduce using rule 37 (factor)
+
+
+State 27
+
+   38 factor: numbersym •
+
+    $default  reduce using rule 38 (factor)
+
+
+State 28
+
+   24 lterm: "!" • lterm
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    lterm    go to state 43
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 29
+
+   39 factor: "(" • expr ")"
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    expr     go to state 44
+    lterm    go to state 31
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 30
+
+   18 writeStmt: "write" expr • ";"
+
+    ";"  shift, and go to state 45
+
+
+State 31
+
+   21 expr: lterm •
+   22     | lterm • relOp lterm
+
+    "=="  shift, and go to state 46
+    "!="  shift, and go to state 47
+    "<"   shift, and go to state 48
+    "<="  shift, and go to state 49
+    ">"   shift, and go to state 50
+    ">="  shift, and go to state 51
+
+    $default  reduce using rule 21 (expr)
+
+    relOp  go to state 52
+
+
+State 32
+
+   23 lterm: lfactor •
+   32 lfactor: lfactor • "+" term
+   33        | lfactor • "-" term
+
+    "+"  shift, and go to state 53
+    "-"  shift, and go to state 54
+
+    $default  reduce using rule 23 (lterm)
+
+
+State 33
+
+   31 lfactor: term •
+   35 term: term • "*" factor
+   36     | term • "/" factor
+
+    "*"  shift, and go to state 55
+    "/"  shift, and go to state 56
+
+    $default  reduce using rule 31 (lfactor)
+
+
+State 34
+
+   34 term: factor •
+
+    $default  reduce using rule 34 (term)
+
+
+State 35
+
+   14 assignStmt: identsym "=" expr • ";"
+
+    ";"  shift, and go to state 57
+
+
+State 36
+
+    5 varDecl: "float" idents ";" •
+
+    $default  reduce using rule 5 (varDecl)
+
+
+State 37
+
+    8 idents: idents "," • identsym
+
+    identsym  shift, and go to state 58
+
+
+State 38
+
+    6 varDecl: "bool" idents ";" •
+
+    $default  reduce using rule 6 (varDecl)
+
+
+State 39
+
+   19 stmts: stmt •
+
+    $default  reduce using rule 19 (stmts)
+
+
+State 40
+
+   15 beginStmt: "{" varDecls stmts • "}"
+   20 stmts: stmts • stmt
+
+    identsym  shift, and go to state 5
+    "{"       shift, and go to state 8
+    "}"       shift, and go to state 59
+    "if"      shift, and go to state 9
+    "read"    shift, and go to state 10
+    "write"   shift, and go to state 11
+
+    stmt        go to state 60
+    assignStmt  go to state 14
+    beginStmt   go to state 15
+    ifStmt      go to state 16
+    readStmt    go to state 17
+    writeStmt   go to state 18
+
+
+State 41
+
+   16 ifStmt: "if" "(" expr • ")" stmt
+
+    ")"  shift, and go to state 61
+
+
+State 42
+
+   17 readStmt: "read" identsym ";" •
+
+    $default  reduce using rule 17 (readStmt)
+
+
+State 43
+
+   24 lterm: "!" lterm •
+
+    $default  reduce using rule 24 (lterm)
+
+
+State 44
+
+   39 factor: "(" expr • ")"
+
+    ")"  shift, and go to state 62
+
+
+State 45
+
+   18 writeStmt: "write" expr ";" •
+
+    $default  reduce using rule 18 (writeStmt)
+
+
+State 46
+
+   25 relOp: "==" •
+
+    $default  reduce using rule 25 (relOp)
+
+
+State 47
+
+   26 relOp: "!=" •
+
+    $default  reduce using rule 26 (relOp)
+
+
+State 48
+
+   27 relOp: "<" •
+
+    $default  reduce using rule 27 (relOp)
+
+
+State 49
+
+   28 relOp: "<=" •
+
+    $default  reduce using rule 28 (relOp)
+
+
+State 50
+
+   29 relOp: ">" •
+
+    $default  reduce using rule 29 (relOp)
+
+
+State 51
+
+   30 relOp: ">=" •
+
+    $default  reduce using rule 30 (relOp)
+
+
+State 52
+
+   22 expr: lterm relOp • lterm
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "!"        shift, and go to state 28
+    "("        shift, and go to state 29
+
+    lterm    go to state 63
+    lfactor  go to state 32
+    term     go to state 33
+    factor   go to state 34
+
+
+State 53
+
+   32 lfactor: lfactor "+" • term
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "("        shift, and go to state 29
+
+    term    go to state 64
+    factor  go to state 34
+
+
+State 54
+
+   33 lfactor: lfactor "-" • term
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "("        shift, and go to state 29
+
+    term    go to state 65
+    factor  go to state 34
+
+
+State 55
+
+   35 term: term "*" • factor
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "("        shift, and go to state 29
+
+    factor  go to state 66
+
+
+State 56
+
+   36 term: term "/" • factor
+
+    identsym   shift, and go to state 26
+    numbersym  shift, and go to state 27
+    "("        shift, and go to state 29
+
+    factor  go to state 67
+
+
+State 57
+
+   14 assignStmt: identsym "=" expr ";" •
+
+    $default  reduce using rule 14 (assignStmt)
+
+
+State 58
+
+    8 idents: idents "," identsym •
+
+    $default  reduce using rule 8 (idents)
+
+
+State 59
+
+   15 beginStmt: "{" varDecls stmts "}" •
+
+    $default  reduce using rule 15 (beginStmt)
+
+
+State 60
+
+   20 stmts: stmts stmt •
+
+    $default  reduce using rule 20 (stmts)
+
+
+State 61
+
+   16 ifStmt: "if" "(" expr ")" • stmt
+
+    identsym  shift, and go to state 5
+    "{"       shift, and go to state 8
+    "if"      shift, and go to state 9
+    "read"    shift, and go to state 10
+    "write"   shift, and go to state 11
+
+    stmt        go to state 68
+    assignStmt  go to state 14
+    beginStmt   go to state 15
+    ifStmt      go to state 16
+    readStmt    go to state 17
+    writeStmt   go to state 18
+
+
+State 62
+
+   39 factor: "(" expr ")" •
+
+    $default  reduce using rule 39 (factor)
+
+
+State 63
+
+   22 expr: lterm relOp lterm •
+
+    $default  reduce using rule 22 (expr)
+
+
+State 64
+
+   32 lfactor: lfactor "+" term •
+   35 term: term • "*" factor
+   36     | term • "/" factor
+
+    "*"  shift, and go to state 55
+    "/"  shift, and go to state 56
+
+    $default  reduce using rule 32 (lfactor)
+
+
+State 65
+
+   33 lfactor: lfactor "-" term •
+   35 term: term • "*" factor
+   36     | term • "/" factor
+
+    "*"  shift, and go to state 55
+    "/"  shift, and go to state 56
+
+    $default  reduce using rule 33 (lfactor)
+
+
+State 66
+
+   35 term: term "*" factor •
+
+    $default  reduce using rule 35 (term)
+
+
+State 67
+
+   36 term: term "/" factor •
+
+    $default  reduce using rule 36 (term)
+
+
+State 68
+
+   16 ifStmt: "if" "(" expr ")" stmt •
+
+    $default  reduce using rule 16 (ifStmt)
