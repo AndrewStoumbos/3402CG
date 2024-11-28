@@ -1,4 +1,3 @@
-// $Id: literal_table.c,v 1.4 2023/11/13 12:45:51 leavens Exp $
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
